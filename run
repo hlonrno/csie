@@ -1,0 +1,3 @@
+javac src/*.java src/*/*.java src/*/*/*.java -d out
+cd out
+java Main
