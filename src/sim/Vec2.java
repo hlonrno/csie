@@ -12,6 +12,32 @@ public class Vec2 {
     this(v, v);
   }
 
+  public static Vec2 zero() {
+    return new Vec2(0, 0);
+  }
+
+  public static Vec2 one() {
+    return new Vec2(1, 1);
+  }
+
+  public Vec2 set(Vec2 v) {
+    x = v.x;
+    y = v.y;
+    return this;
+  }
+
+  public Vec2 normPerAxis() {
+    x /= x == 0 ? 1 : x;
+    y /= y == 0 ? 1 : y;
+    return this;
+  }
+
+  public Vec2 min(Vec2 v) {
+    this.x = Math.min(v.x, x);
+    this.y = Math.min(v.y, y);
+    return this;
+  }
+
   public Vec2 clone() {
     return new Vec2(x, y);
   }
@@ -31,7 +57,7 @@ public class Vec2 {
   public Vec2 add(Vec2 v) {
     return add(v.x, v.y);
   }
-  
+
   public Vec2 sub(int x, int y) {
     return add(-x, -y);
   }
@@ -85,9 +111,9 @@ public class Vec2 {
   @Override
   public String toString() {
     return new StringBuilder()
-      .append(x)
-      .append(';')
-      .append(y)
-      .toString();
+        .append(x)
+        .append(';')
+        .append(y)
+        .toString();
   }
 }

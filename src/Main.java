@@ -1,21 +1,22 @@
-import java.util.Scanner;
-
 import sim.world.World;
 import sim.gates.*;
 import sim.Vec2;
 
 public class Main {
   public static void main(String[] args) {
-    var world = new World();
+    // var and1 = new Gate(GateType.AND, new Vec2(0, 0));
+    // var nor1 = new Gate(GateType.NOR, new Vec2(1, 1));
+    var nor2 = new Gate(GateType.NOR, new Vec2(24, -24));
 
-    try (var sc = new Scanner(System.in)) {
-      String line;
-      while (!(line = sc.nextLine()).isBlank()) {
-        String[] axies = line.split(";");
-        Vec2 position = new Vec2(Integer.parseInt(axies[0]), Integer.parseInt(axies[1]));
-        Gate gate = new Gate(GateType.OR, position);
-        world.add(gate);
-      }
-    }
+    var world = new World();
+    // world.add(and1);
+    // world.add(nor1);
+    world.gate(nor2);
+    /*
+     * and1.addInput(nor1);
+     * and1.addInput(nor2);
+     * and1.eval();
+     * System.out.println("1 & 1 = " + and1.state);
+     */
   }
 }

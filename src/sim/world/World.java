@@ -18,20 +18,23 @@ public class World {
     return root.query(point).map(n -> n.value);
   }
 
-  public void set(Gate value) {
-    add(value);
+  public void set(Gate gate) {
+    gate(gate);
   }
 
-  public void add(Gate value) {
-    Vec2 point = value.position;
+  public void gate(Gate gate) {
+    Vec2 point = gate.position;
     while (root.isNotInBounds(point)) {
-      var newRoot = new QTree(root.size.clone().mul(2), root.getPosition(point));
+      var newPosition = root.getPosition(point);
+      var newRoot = new QTree(root.size.clone().mul(2), newPosition);
       var childIndex = newRoot.getChildIndex(point);
       newRoot.children[childIndex] = root;
       root = newRoot;
+      System.out.print(root.position);
+      System.out.println(" " + root.size);
     }
 
-    root.add(value);
+    root.add(gate);
   }
 
   public void del(Vec2 point) {

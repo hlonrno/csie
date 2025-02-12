@@ -26,11 +26,9 @@ public class QTree {
     this.value = value;
   }
 
-  private int count = 0;
   public QTree add(Gate gate) {
     var root = this;
     while (!root.size.equals(1, 1)) {
-      count++; while (count > 16);
       int childIndex = root.getChildIndex(gate.position);
 
       if (root.children[childIndex] == null) {
@@ -39,7 +37,6 @@ public class QTree {
       }
       root = root.children[childIndex];
     }
-    System.out.println(root.position);
 
     root.isLeaf = true;
     root.value = gate;
@@ -109,12 +106,14 @@ public class QTree {
 
   public Vec2 getPosition(Vec2 point) {
     // Integer arithmetic
-    return position.clone()
-        .add(point.clone()
-            .abs()
-            .sub(position)
-            .div(halfSize)
-            .mul(halfSize));
+    var p = point.clone()
+        .sub(position)
+        .normPerAxis()
+        .div(size)
+        .mul(size);
+    if (point.x < position.x || point.y < position.y)
+      return p.sub(size);
+    return p.add(size);
   }
 
   public int getChildIndex(Vec2 point) {
@@ -131,9 +130,9 @@ public class QTree {
 
   public boolean isNotInBounds(Vec2 point) {
     return point.x < position.x
-      || point.y < position.y
-      || point.x > position.x + size.x
-      || point.y > position.y + size.y;
+        || point.y < position.y
+        || point.x > position.x + size.x
+        || point.y > position.y + size.y;
   }
 
   public boolean isLeaf() {
