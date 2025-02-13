@@ -1,5 +1,7 @@
 package sim;
 
+import java.util.function.Function;
+
 public class Vec2 {
   public int x, y;
 
@@ -18,6 +20,12 @@ public class Vec2 {
 
   public static Vec2 one() {
     return new Vec2(1, 1);
+  }
+
+  public Vec2 map(Function<Integer, Integer> f) {
+    x = f.apply(x);
+    y = f.apply(y);
+    return this;
   }
 
   public Vec2 set(Vec2 v) {
@@ -94,14 +102,8 @@ public class Vec2 {
     return div(n, n);
   }
 
-  public Vec2 shiftRight(int n) {
-    this.x >>= n;
-    this.y >>= n;
-    return this;
-  }
-
-  public boolean equals(Vec2 other) {
-    return other.x == x && other.y == y;
+  public boolean equals(Vec2 v) {
+    return v.x == x && v.y == y;
   }
 
   public boolean equals(int x, int y) {

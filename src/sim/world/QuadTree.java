@@ -1,49 +1,47 @@
 package sim.world;
 
-import java.util.Arrays;
 import java.util.Optional;
 import java.util.Stack;
 
 import sim.gates.Gate;
 import sim.Vec2;
 
-public class QTree {
-  protected QTree[] children;
+public class QuadTree {
+  protected QuadTree[] children;
   protected Vec2 size, halfSize, position;
+  protected Gate value = null;
   private boolean isLeaf = false;
-  public Gate value = null;
 
-  public QTree(Vec2 treeSize, Vec2 position) {
-    size = treeSize.clone();
-    children = new QTree[4];
-    halfSize = treeSize.clone().shiftRight(1);
+  public QuadTree(Vec2 size, Vec2 position) {
+    this.size = size.clone();
     this.position = position.clone();
-    Arrays.fill(children, null);
+    halfSize = size.clone().map(x -> x >> 1);
+    children = new QuadTree[] { null, null, null, null };
   }
 
-  public QTree(Vec2 treeSize, Vec2 position, Gate value) {
+  public QuadTree(Vec2 treeSize, Vec2 position, Gate value) {
     this(treeSize, position);
     this.value = value;
   }
 
-  public QTree add(Gate gate) {
-    var root = this;
-    while (!root.size.equals(1, 1)) {
-      int childIndex = root.getChildIndex(gate.position);
+  public QuadTree add(Gate gate) {
+    var node = this;
+    while (!node.size.equals(1, 1)) {
+      int childIndex = node.getChildIndex(gate.position);
 
-      if (root.children[childIndex] == null) {
-        var newPosition = root.getPosition(gate.position);
-        root.children[childIndex] = new QTree(root.halfSize, newPosition);
+      if (node.children[childIndex] == null) {
+        var newPosition = node.getPosition(gate.position);
+        node.children[childIndex] = new QuadTree(node.halfSize, newPosition);
       }
-      root = root.children[childIndex];
+      node = node.children[childIndex];
     }
 
-    root.isLeaf = true;
-    root.value = gate;
-    return root;
+    node.isLeaf = true;
+    node.value = gate;
+    return node;
   }
 
-  public Optional<QTree> query(Vec2 point) {
+  public Optional<QuadTree> query(Vec2 point) {
     var root = this;
     while (!root.isLeaf) {
       int childIndex = root.getChildIndex(point);
@@ -56,13 +54,13 @@ public class QTree {
     return Optional.of(root);
   }
 
-  public boolean remove(Vec2 point) {
+  public Optional<Gate> remove(Vec2 point) {
     var root = this;
-    var path = new Stack<QTree>();
+    var path = new Stack<QuadTree>();
     while (!root.isLeaf) {
       int childIndex = root.getChildIndex(point);
       if (root.children[childIndex] == null)
-        return false;
+        return Optional.empty();
       path.push(root);
       root = root.children[childIndex];
     }
@@ -71,20 +69,10 @@ public class QTree {
     int childIndex = parent.getChildIndex(point);
     parent.children[childIndex] = null;
 
-    boolean isNotEmpty = false;
-    for (var child : parent.children)
-      if (child != null) {
-        isNotEmpty = true;
-        break;
-      }
-
-    if (!isNotEmpty)
-      return true;
-
     while (!path.isEmpty()) {
       var node = path.pop();
 
-      isNotEmpty = false;
+      boolean isNotEmpty = false;
       for (var child : node.children)
         if (child != null) {
           isNotEmpty = true;
@@ -101,19 +89,14 @@ public class QTree {
       parent.children[childIndex] = null;
     }
 
-    return true;
+    return Optional.of(root.value);
   }
 
   public Vec2 getPosition(Vec2 point) {
-    // Integer arithmetic
-    var p = point.clone()
-        .sub(position)
-        .normPerAxis()
-        .div(size)
-        .mul(size);
-    if (point.x < position.x || point.y < position.y)
-      return p.sub(size);
-    return p.add(size);
+    return point.clone()
+        .map(x -> x < position.x ? -1 : 0)
+        .mul(size)
+        .add(position);
   }
 
   public int getChildIndex(Vec2 point) {
@@ -125,7 +108,6 @@ public class QTree {
     if (point.y < position.y + halfSize.y)
       return 1;
     return 3;
-
   }
 
   public boolean isNotInBounds(Vec2 point) {

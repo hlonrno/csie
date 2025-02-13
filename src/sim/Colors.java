@@ -3,9 +3,12 @@ package sim;
 import java.awt.Color;
 
 public enum Colors {
+  black(new Color(10, 10, 10)),
+  white(new Color(240, 240, 240)),
   lightBlue(new Color(75, 120, 230)),
   lightGreen(new Color(120, 230, 75)),
   lightPurple(new Color(180, 75, 210)),
+  darkGrey(new Color(45, 45, 45)),
   darkBlue(new Color(20, 50, 120)),
   darkGreen(new Color(30, 170, 20)),
   darkPurple(new Color(140, 40, 190));

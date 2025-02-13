@@ -9,12 +9,14 @@ public class Gate {
   public Vec2 position;
   public GateType type;
   public boolean state;
+  public ArrayList<Gate> outputs;
   public ArrayList<Gate> inputs;
 
   public Gate(GateType type, Vec2 position) {
     this.type = type;
     this.position = position;
     inputs = new ArrayList<Gate>();
+    outputs = new ArrayList<Gate>();
     eval();
   }
 
@@ -24,6 +26,7 @@ public class Gate {
 
   public void addInput(Gate gate) {
     inputs.add(gate);
+    gate.outputs.add(this);
   }
 
   public Color getColor() {
