@@ -1,9 +1,10 @@
-package sim;
+package sim.gui;
 
 import java.awt.Font;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import sim.world.World;
+import sim.Vec2;
 import sim.gates.*;
 
 public class Window {
@@ -29,10 +30,8 @@ public class Window {
     frame.setVisible(true);
 
     world = new World();
-    world.add(new Gate(GateType.AND, new Vec2(1, -1)));
-    world.add(new Gate(GateType.AND, new Vec2(2, -2)));
-    world.add(new Gate(GateType.AND, new Vec2(3, -3)));
-    world.add(new Gate(GateType.AND, new Vec2(4, -4)));
+    world.add(new Gate(GateType.AND, new Vec2(1, 1)));
+    world.add(new Gate(GateType.AND, new Vec2(4, 4)));
 
     renderer = new Renderer(world);
     frame.add(renderer);
