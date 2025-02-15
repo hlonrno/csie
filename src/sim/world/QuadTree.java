@@ -7,16 +7,16 @@ import sim.gates.Gate;
 import sim.Vec2;
 
 public class QuadTree {
-  protected QuadTree[] children;
+  protected QuadTree[] children = new QuadTree[] { null, null, null, null };
   protected Vec2 size, halfSize, position;
   protected Gate value = null;
   private boolean isLeaf = false;
+  private int index = 0;
 
   public QuadTree(Vec2 size, Vec2 position) {
     this.size = size.clone();
     this.position = position.clone();
     halfSize = size.clone().map(x -> x >> 1);
-    children = new QuadTree[] { null, null, null, null };
   }
 
   public QuadTree(Vec2 treeSize, Vec2 position, Gate value) {
@@ -119,5 +119,16 @@ public class QuadTree {
 
   public boolean isLeaf() {
     return isLeaf;
+  }
+
+  public Optional<QuadTree> getNextChild() {
+    QuadTree child;
+    while ((child = children[index]) == null) {
+      index++;
+      if (index == children.length)
+        return Optional.empty();
+    }
+
+    return Optional.of(child);
   }
 }

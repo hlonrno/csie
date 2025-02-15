@@ -62,12 +62,20 @@ public class Vec2 {
     return this;
   }
 
+  public Vec2 add(int n) {
+    return add(n, n);
+  }
+
   public Vec2 add(Vec2 v) {
     return add(v.x, v.y);
   }
 
   public Vec2 sub(int x, int y) {
     return add(-x, -y);
+  }
+
+  public Vec2 sub(int n) {
+    return add(-n, -n);
   }
 
   public Vec2 sub(Vec2 v) {

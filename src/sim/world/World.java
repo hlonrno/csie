@@ -1,6 +1,8 @@
 package sim.world;
 
+import java.util.Iterator;
 import java.util.Optional;
+import java.util.Stack;
 
 import sim.gates.Gate;
 import sim.Vec2;
@@ -51,4 +53,39 @@ public class World {
       return g;
     });
   }
+
+  public Iterable<Gate> gateIterable() {
+    return new Iterable<Gate>() {
+      @Override
+      public Iterator<Gate> iterator() {
+        return new Iterator<Gate>() {
+          Stack<QuadTree> path = new Stack<QuadTree>();
+          QuadTree node = root;
+
+          @Override
+          public boolean hasNext() {
+            return path.isEmpty();
+          }
+
+          @Override
+          public Gate next() {
+            if (node.isLeaf())
+              node = path.pop();
+
+            while (!node.isLeaf()) {
+              path.push(node);
+              var nextNode = node.getNextChild();
+              if (nextNode.isEmpty())
+                node = path.pop();
+              else
+                node = nextNode.get();
+            }
+
+            return node.value;
+          }
+        };
+      }
+    };
+  }
+
 }
