@@ -1,3 +1,4 @@
+rm -rf out/*
 javac src/*.java src/*/*.java src/*/*/*.java -d out
 cd out
-java Main
+java -XX:+UseZGC -XX:+ZGenerational Main

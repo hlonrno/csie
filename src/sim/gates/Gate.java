@@ -36,13 +36,11 @@ public class Gate {
   @Override
   public String toString() {
     return new StringBuilder("<Gate:")
-      .append(state ? 1 : 0)
+      .append(state)
       .append('|')
       .append(position)
       .append('|')
       .append(type)
-      .append('|')
-      .append(inputs.size())
       .append('>')
       .toString();
   }
