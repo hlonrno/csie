@@ -63,16 +63,16 @@ public class Window {
 
       int movementSpeed = (int)(8 * deltaTime);
       if (input.isKeyPressed("w")) {
-        renderer.cameraOffset.add(0, -movementSpeed);
+        renderer.cameraPosition.add(0, -movementSpeed);
       }
       if (input.isKeyPressed("s")) {
-        renderer.cameraOffset.add(0, movementSpeed);
+        renderer.cameraPosition.add(0, movementSpeed);
       }
       if (input.isKeyPressed("a")) {
-        renderer.cameraOffset.add(-movementSpeed, 0);
+        renderer.cameraPosition.add(-movementSpeed, 0);
       }
       if (input.isKeyPressed("d")) {
-        renderer.cameraOffset.add(movementSpeed, 0);
+        renderer.cameraPosition.add(movementSpeed, 0);
       }
       if (input.isKeyPressed("q")) {
         renderer.scale += 0.06f * deltaTime;

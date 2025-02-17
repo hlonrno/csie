@@ -22,4 +22,8 @@ public class World {
     public Optional<Gate> delete(Vec2 point) {
         return root.remove(point);
     }
+
+    public Iterable<Gate> iterable() {
+        return root.iterable();
+    }
 }

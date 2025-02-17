@@ -1,7 +1,10 @@
 package sim.world;
 
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.Optional;
 import java.util.Stack;
+
 import sim.Vec2;
 
 public class QuadTree<T> {
@@ -98,6 +101,35 @@ public class QuadTree<T> {
         }
 
         return Optional.of(value);
+    }
+
+    public Iterable<T> iterable() {
+        var items = new ArrayList<T>();
+
+        var stack = new Stack<QuadTree<T>>();
+        var node = this;
+        stack.push(node);
+        while (!stack.isEmpty()) {
+            node = stack.pop();
+            if (node == null) {
+                continue;
+            }
+            stack.push(node.topLeft);
+            stack.push(node.topRight);
+            stack.push(node.bottomLeft);
+            stack.push(node.bottomRight);
+
+            if (node.value != null) {
+                items.add(node.value);
+            }
+        }
+
+        return new Iterable<T>() {
+            @Override
+            public Iterator<T> iterator() {
+                return items.iterator();
+            }
+        };
     }
 
     private Vec2 getPosition(Vec2 point) {
