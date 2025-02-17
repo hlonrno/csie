@@ -23,23 +23,19 @@ public class Window {
     frame.setTitle("CM2.1");
     frame.setUndecorated(true);
     frame.setBackground(Colors.darkGrey.get());
-    frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
 
     var label = new JLabel("Loading..");
+    label.setBackground(Colors.darkGrey.get());
+    label.setForeground(Colors.white.get());
     label.setVerticalAlignment(JLabel.CENTER);
     label.setHorizontalAlignment(JLabel.CENTER);
-    label.setFont(new Font("Halvetica", Font.BOLD, 48));
+    label.setFont(new Font("Halvetica", Font.BOLD, 58));
     frame.add(label);
     frame.setVisible(true);
 
     world = new World();
     world.add(new Gate(GateType.AND, new Vec2(-1, -1)));
     world.add(new Gate(GateType.OR, new Vec2(4, 4)));
-
-    for (var g : world.gateIterable()) {
-      System.out.println(g);
-    }
-    System.out.println(world.get(new Vec2(4, 4)));
 
     keyBuffer = new JLabel();
     frame.add(keyBuffer);
@@ -85,7 +81,7 @@ public class Window {
         renderer.scale -= 0.06f * deltaTime;
       }
 
-      keyBuffer.setText(input.keyBuffer());
+      keyBuffer.setText(input.getKeyBuffer());
 
       frame.repaint();
 
