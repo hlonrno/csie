@@ -1,5 +1,6 @@
 package sim;
 
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public class Vec2 {
@@ -26,6 +27,10 @@ public class Vec2 {
     x = f.apply(x);
     y = f.apply(y);
     return this;
+  }
+
+  public <T> T flat(BiFunction<Integer, Integer, T> f) {
+      return f.apply(x, y);
   }
 
   public Vec2 set(Vec2 v) {

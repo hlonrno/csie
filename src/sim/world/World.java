@@ -1,91 +1,25 @@
 package sim.world;
 
-import java.util.Iterator;
 import java.util.Optional;
-import java.util.Stack;
-
 import sim.gates.Gate;
 import sim.Vec2;
 
 public class World {
-  QuadTree root;
+    private QuadTree<Gate> root;
 
-  public World() {
-    root = new QuadTree(new Vec2(16, 16), new Vec2(0, 0));
-  }
-
-  public Optional<Gate> get(Vec2 point) {
-    if (root.isNotInBounds(point))
-      return Optional.empty();
-    return root.query(point).map(n -> n.value);
-  }
-
-  public void set(Gate gate) {
-    add(gate);
-  }
-
-  public void add(Gate gate) {
-    Vec2 point = gate.position;
-    while (root.isNotInBounds(point)) {
-      var newPosition = root.getPosition(point);
-      var newRoot = new QuadTree(root.size.clone().mul(2), newPosition);
-      var childIndex = newRoot.getChildIndex(point);
-      newRoot.children[childIndex] = root;
-      root = newRoot;
+    public World() {
+        root = new QuadTree<>(new Vec2(16, 16), new Vec2(0, 0));
     }
 
-    root.add(gate);
-  }
+    public Optional<Gate> get(Vec2 point) {
+        return root.query(point);
+    }
 
-  public void del(Vec2 point) {
-    if (root.isNotInBounds(point))
-      return;
-    var gate = root.remove(point);
-    gate.map(g -> {
-      g.outputs.parallelStream()
-          .forEach(out -> {
-            for (int i = 0; i < out.inputs.size(); i++)
-              if (out.inputs.get(i).position.equals(gate.get().position)) {
-                out.inputs.remove(i);
-                return;
-              }
-          });
-      return g;
-    });
-  }
+    public void set(Gate gate) {
+        root = root.add(gate.position, gate);
+    }
 
-  public Iterable<Gate> gateIterable() {
-    return new Iterable<Gate>() {
-      @Override
-      public Iterator<Gate> iterator() {
-        return new Iterator<Gate>() {
-          Stack<QuadTree> path = new Stack<QuadTree>();
-          QuadTree node = root;
-
-          @Override
-          public boolean hasNext() {
-            return path.isEmpty();
-          }
-
-          @Override
-          public Gate next() {
-            if (node.isLeaf())
-              node = path.pop();
-
-            while (!node.isLeaf()) {
-              path.push(node);
-              var nextNode = node.getNextChild();
-              if (nextNode.isEmpty())
-                node = path.pop();
-              else
-                node = nextNode.get();
-            }
-
-            return node.value;
-          }
-        };
-      }
-    };
-  }
-
+    public Optional<Gate> delete(Vec2 point) {
+        return root.remove(point);
+    }
 }

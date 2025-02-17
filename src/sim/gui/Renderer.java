@@ -27,7 +27,7 @@ public class Renderer extends JPanel {
     scaledCameraOffset.set(cameraOffset)
       .map(x -> (int)Math.floor(x * scale));
 
-    for (Gate gate : world.gateIterable()) {
+    for (var gate : world.iterator()) {
       topLeft.set(gate.position)
         .map(x -> (int)Math.floor(x * cellSize * scale));
       size.set(gate.position)
