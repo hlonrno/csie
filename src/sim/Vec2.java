@@ -29,7 +29,7 @@ public class Vec2 {
     return this;
   }
 
-  public <T> T flat(BiFunction<Integer, Integer, T> f) {
+  public <T> T flatMap(BiFunction<Integer, Integer, T> f) {
       return f.apply(x, y);
   }
 

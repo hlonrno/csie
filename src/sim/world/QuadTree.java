@@ -6,6 +6,7 @@ import java.util.Optional;
 import java.util.Stack;
 
 import sim.Vec2;
+import sim.Range;
 
 public class QuadTree<T> {
     public T value = null;
@@ -13,11 +14,14 @@ public class QuadTree<T> {
             topRight = null,
             bottomLeft = null,
             bottomRight = null;
-    private final Vec2 size, position;
+    private final Vec2 position;
+    private final int size;
+    private final Range range;
 
-    public QuadTree(Vec2 initialSize, Vec2 position) {
-        size = initialSize.clone();
+    public QuadTree(int initialSize, Vec2 position) {
+        size = initialSize;
         this.position = position.clone();
+        range = new Range(position, new Vec2(size));
     }
 
     /**
@@ -27,29 +31,39 @@ public class QuadTree<T> {
      * otherwise {@code this}.
      */
     public QuadTree<T> add(Vec2 point, T value) {
+        System.out.printf("""
+            add(%s,_)
+                position: %s,
+                size: %d;\n
+            """,
+            point,
+            position,
+            size
+        );
         var root = this;
-        while (isNotInBounds(point)) {
-            var position = root.getPosition(point);
-            var newNode = new QuadTree<T>(root.size.mul(2), position);
-            root.size.div(2);
-            root.setChild(point, newNode);
+        while (!root.range.contains(point)) {
+            var newPosition = root.getPosition(point);
+            var newNode = new QuadTree<T>(root.size << 1, newPosition);
+            newNode.setChildDiagonal(point, root);
+            root = newNode;
         }
 
         var node = root;
-        while (!node.size.equals(1, 1)) {
+        while (node.size != 1) {
             var next = node.getChild(point);
-            if (next.value == null) {
+            if (next != null) {
                 node = next;
                 continue;
             }
-            var position = next.getPosition(point);
-            var newNode = new QuadTree<T>(next.size.div(2), position);
-            next.size.mul(2);
-            next.setChild(point, newNode);
+            System.out.println("new");
+            var newPosition = node.getPosition(point);
+            var newNode = new QuadTree<T>(node.size >> 1, newPosition);
+            node.setChild(point, newNode);
             node = newNode;
         }
 
         node.value = value;
+        System.out.println("returns: " + root);
         return root;
     }
 
@@ -60,14 +74,14 @@ public class QuadTree<T> {
      */
     public Optional<T> query(Vec2 point) {
         var node = this;
-        while (!node.size.equals(1, 1)) {
+        while (node.size != 1) {
             var next = node.getChild(point);
             if (next == null) {
                 return Optional.empty();
             }
             node = next;
         }
-        
+
         return Optional.of(node.value);
     }
 
@@ -80,7 +94,7 @@ public class QuadTree<T> {
         var stack = new Stack<QuadTree<T>>();
         var node = this;
         stack.push(node);
-        while (!node.size.equals(1, 1)) {
+        while (node.size != 1) {
             var next = node.getChild(point);
             if (next == null) {
                 return Optional.empty();
@@ -103,26 +117,27 @@ public class QuadTree<T> {
         return Optional.of(value);
     }
 
-    public Iterable<T> iterable() {
+    public Iterable<T> iterable(Range range) {
         var items = new ArrayList<T>();
+        System.out.println(range);
 
         var stack = new Stack<QuadTree<T>>();
         var node = this;
         stack.push(node);
         while (!stack.isEmpty()) {
             node = stack.pop();
-            if (node == null) {
+            if (node == null || !range.intersects(node.range))
                 continue;
-            }
-            stack.push(node.topLeft);
-            stack.push(node.topRight);
-            stack.push(node.bottomLeft);
-            stack.push(node.bottomRight);
-
-            if (node.value != null) {
+            System.out.println(node);
+            if (node.value != null)
                 items.add(node.value);
-            }
+
+            stack.push(node.bottomRight);
+            stack.push(node.bottomLeft);
+            stack.push(node.topRight);
+            stack.push(node.topLeft);
         }
+        System.out.println("\n" + items.size());
 
         return new Iterable<T>() {
             @Override
@@ -132,11 +147,23 @@ public class QuadTree<T> {
         };
     }
 
+    public boolean isLeaf() {
+        return topLeft == null
+            && topRight == null
+            && bottomLeft == null
+            && bottomRight == null;
+    }
+
     private Vec2 getPosition(Vec2 point) {
         return point
             .clone()
-            .map(x -> (point.x == x ? position.x : position.y) > x ? -1 : 0)
-            .mul(size)
+            .sub(position)
+            .map(x -> x < 0 ? -2
+                    : x >= size ? 0
+                    : x >= size >> 1 ? 1
+                    : 0
+            )
+            .mul(size >> 1)
             .add(position);
     }
 
@@ -146,8 +173,18 @@ public class QuadTree<T> {
             case 1 -> topRight = node;
             case 2 -> bottomLeft = node;
             case 3 -> bottomRight = node;
-            default -> throw new IllegalStateException("QuadTree.getChildIndex(Vec2) must return integers 0-3.");
+            default -> throw new IllegalStateException("QuadTree.getChildIndex(Vec2) must return integers 0..=3.");
         }
+    }
+    
+    private void setChildDiagonal(Vec2 point, QuadTree<T> node) {
+        switch (getChildIndex(point)) {
+            case 3 -> topLeft = node;
+            case 2 -> topRight = node;
+            case 1 -> bottomLeft = node;
+            case 0 -> bottomRight = node;
+            default -> throw new IllegalStateException("QuadTree.getChildIndex(Vec2) must return integers 0..=3.");
+        };
     }
 
     private QuadTree<T> getChild(Vec2 point) {
@@ -156,32 +193,39 @@ public class QuadTree<T> {
             case 1 -> topRight;
             case 2 -> bottomLeft;
             case 3 -> bottomRight;
-            default -> throw new IllegalStateException("QuadTree.getChildIndex(Vec2) must return integers 0-3.");
+            default -> throw new IllegalStateException("QuadTree.getChildIndex(Vec2) must return integers 0..=3.");
         };
     }
 
     private int getChildIndex(Vec2 point) {
-        if (point.x < position.x + size.x >> 1) {
-            if (point.y < position.y + size.y >> 1)
-                return 0;
-            return 2;
-        }
-        if (point.y < position.y + size.y >> 1)
-            return 1;
-        return 3;
+        System.out.printf("""
+                point: %s,
+                position: %s,
+                size: %d;\n
+            """,
+            point,
+            position,
+            size
+        );
+        return point
+            .clone()
+            .sub(position)
+            .map(x -> x < size >> 1 ? 0 : 1)
+            .flatMap((x, y) -> x + y * 2);
     }
 
-    public boolean isNotInBounds(Vec2 point) {
-        return point.x < position.x
-            || point.y < position.y
-            || point.x > position.x + size.x
-            || point.y > position.y + size.y;
-    }
-
-    public boolean isLeaf() {
-        return topLeft == null
-            && topRight == null
-            && bottomLeft == null
-            && bottomRight == null;
+    @Override
+    public String toString() {
+        return new StringBuilder("<QuadTree:")
+            .append(range)
+            .append('|')
+            .append(topLeft == null ? 0 : 1)
+            .append(topRight == null ? 0 : 1)
+            .append(bottomLeft == null ? 0 : 1)
+            .append(bottomRight == null ? 0 : 1)
+            .append('|')
+            .append(value == null ? "" : value)
+            .append('>')
+            .toString();
     }
 }
