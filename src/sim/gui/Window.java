@@ -34,23 +34,22 @@ public class Window {
         label.setForeground(Colors.white.get());
         label.setVerticalAlignment(JLabel.CENTER);
         label.setHorizontalAlignment(JLabel.CENTER);
-        label.setFont(new Font("", Font.BOLD, 58));
+        label.setFont(new Font("Comic Sans", Font.BOLD, 58));
         frame.add(label);
         frame.setVisible(true);
+        frame.repaint();
 
         world = new World();
         input = new Input();
         renderer = new Renderer(world);
         keyBuffer = new JLabel();
 
-        keyBuffer.setBackground(Colors.darkerGrey.get());
-        keyBuffer.setForeground(Colors.white.get());
-        keyBuffer.setFont(new Font("", Font.PLAIN, 14));
+        keyBuffer.setFont(new Font("Comic Sans", Font.PLAIN, 14));
         keyBuffer.setPreferredSize(new Dimension(30, 20));
 
         //
-        for (int i = 0; i < 25; i++)
-            for (int j = 0; j < 25; j++)
+        for (int i = -100; i < 100; i++)
+            for (int j = -100; j < 100; j++)
                 world.set(new Gate(GateType.OR, new Vec2(i, j)));
         world.iterable();
         //
@@ -97,18 +96,15 @@ public class Window {
                 renderer.scale -= 0.06f * deltaTime;
             }
 
-            keyBuffer.setText(" " + input.getKeyBuffer());
-            System.out.print("\n\n\n\n\n\n\n\n\n\n".repeat(4));
+            keyBuffer.setText(" " + input.getKeyBuffer() + renderer.viewRange);
             frame.repaint();
 
             lastTime = now;
             nanos = (frameTimeNanos - (System.nanoTime() - now)) / 1000;
             millis = nanos / 1000;
             nanos -= millis * 1000;
-            if (millis + nanos > 0)
+            if (millis > 0 && nanos > 0)
                 Thread.sleep(millis, (int)nanos);
-            else
-                Thread.yield();
         }
     }
 }

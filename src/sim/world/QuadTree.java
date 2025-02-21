@@ -5,8 +5,6 @@ import java.util.Iterator;
 import java.util.Optional;
 import java.util.Stack;
 
-import javax.swing.plaf.BorderUIResource;
-
 import sim.Vec2;
 import sim.Range;
 
@@ -36,6 +34,7 @@ public class QuadTree<T> {
         while (!range.contains(point)) {
             var pos = getPosition(point);
             var node = new QuadTree<T>(size.x, position);
+            var oldPosition = position.clone();
             node.topLeft = topLeft;
             node.topRight = topRight;
             node.bottomLeft = bottomLeft;
@@ -44,13 +43,13 @@ public class QuadTree<T> {
             topRight = null;
             bottomLeft = null;
             bottomRight = null;
-            position = pos.clone();
+            position.set(pos);
             size.mul(2);
 
-            pos.sub(position);
-            if (pos.x == -(size.x ^ (size.x & 1)))
+            pos.sub(oldPosition);
+            if (pos.x == -(size.x >> 1))
                 pos.x = 1;
-            if (pos.y == -(size.x ^ (size.x & 1)))
+            if (pos.y == -(size.x >> 1))
                 pos.y = 1;
             setChild(pos.x + pos.y * 2, node);
         }
@@ -122,7 +121,6 @@ public class QuadTree<T> {
 
     public Iterable<T> iterable(Range range) {
         var items = new ArrayList<T>();
-        System.out.println(range);
 
         var stack = new Stack<QuadTree<T>>();
         var node = this;
@@ -131,7 +129,6 @@ public class QuadTree<T> {
             node = stack.pop();
             if (node == null || !range.intersects(node.range))
                 continue;
-            System.out.println(node);
             if (node.value != null)
                 items.add(node.value);
 
@@ -140,7 +137,6 @@ public class QuadTree<T> {
             stack.push(node.topRight);
             stack.push(node.topLeft);
         }
-        System.out.println("\n" + items.size());
 
         return new Iterable<T>() {
             @Override
@@ -180,7 +176,7 @@ public class QuadTree<T> {
             case 1 -> topRight = node;
             case 2 -> bottomLeft = node;
             case 3 -> bottomRight = node;
-            default -> throw new IllegalStateException("QuadTree.getChildIndex(Vec2) must return integers 0..=3.");
+            default -> throw new IllegalStateException("Index must be in [0;3]");
         }
     }
 
@@ -190,7 +186,7 @@ public class QuadTree<T> {
             case 1 -> topRight;
             case 2 -> bottomLeft;
             case 3 -> bottomRight;
-            default -> throw new IllegalStateException("QuadTree.getChildIndex(Vec2) must return integers 0..=3.");
+            default -> throw new IllegalStateException("Index must be in [0;3]");
         };
     }
 
