@@ -1,1 +1,2 @@
-# cm2.1.java
+# Circuit Simulator and Editor (CS&E)
+
