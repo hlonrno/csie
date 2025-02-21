@@ -102,8 +102,8 @@ public class Input implements KeyListener {
         int index = keyBuffer.indexOf(key.get());
         if (index != -1)
             keyBuffer.delete(
-                    index,
-                    index + key.get().length()
-                    );
+                index,
+                index + key.get().length()
+            );
     }
 }
