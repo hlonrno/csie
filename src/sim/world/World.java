@@ -17,7 +17,7 @@ public class World {
     }
 
     public void set(Gate gate) {
-        root = root.add(gate.position, gate);
+        root.add(gate.position, gate);
     }
 
     public Optional<Gate> delete(Vec2 point) {

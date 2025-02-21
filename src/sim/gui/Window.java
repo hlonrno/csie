@@ -49,9 +49,9 @@ public class Window {
         keyBuffer.setPreferredSize(new Dimension(30, 20));
 
         //
-        world.set(new Gate(GateType.OR, new Vec2(17, 0)));
-        world.set(new Gate(GateType.OR, new Vec2(0, 17)));
-
+        for (int i = 0; i < 25; i++)
+            for (int j = 0; j < 25; j++)
+                world.set(new Gate(GateType.OR, new Vec2(i, j)));
         world.iterable();
         //
 
