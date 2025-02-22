@@ -45,7 +45,7 @@ public class Renderer extends JPanel {
 
         // viewRange has references to these objects.
         viewTopLeft.set(cameraPosition)
-            .map(x -> (int)(x / (cellSize * scale) - 1f));
+            .map(x -> (int)(x / (cellSize * scale) - (x < 0 ? 1f : 0f)));
         viewSize.set(cameraPosition)
             .add(getWidth(), getHeight())
             .map(x -> (int)(x / (cellSize * scale) + 1f))

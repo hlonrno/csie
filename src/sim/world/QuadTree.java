@@ -4,19 +4,20 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Optional;
 import java.util.Stack;
+import java.util.function.Consumer;
 
 import sim.Vec2;
 import sim.Range;
 
-public class QuadTree<T> {
+public class QuadTree<T> implements Iterable<T> {
     public T value = null;
+    private Vec2 position;
+    private Vec2 size;
+    private Range range;
     private QuadTree<T> topLeft = null,
             topRight = null,
             bottomLeft = null,
             bottomRight = null;
-    private Vec2 position;
-    private Vec2 size;
-    private Range range;
 
     public QuadTree(int initialSize, Vec2 position) {
         range = new Range(position, new Vec2(initialSize));
@@ -32,13 +33,15 @@ public class QuadTree<T> {
      */
     public void add(Vec2 point, T value) {
         while (!range.contains(point)) {
+            var oldPosition = position.clone();
             var pos = getPosition(point);
             var node = new QuadTree<T>(size.x, position);
-            var oldPosition = position.clone();
+            node.value = value;
             node.topLeft = topLeft;
             node.topRight = topRight;
             node.bottomLeft = bottomLeft;
             node.bottomRight = bottomRight; 
+            this.value = null;
             topLeft = null;
             topRight = null;
             bottomLeft = null;
@@ -46,12 +49,11 @@ public class QuadTree<T> {
             position.set(pos);
             size.mul(2);
 
-            pos.sub(oldPosition);
-            if (pos.x == -(size.x >> 1))
-                pos.x = 1;
-            if (pos.y == -(size.x >> 1))
-                pos.y = 1;
-            setChild(pos.x + pos.y * 2, node);
+            int index = pos
+                .sub(oldPosition)
+                .map(a -> a == -(size.x >> 1) ? 1 : 0)
+                .flat((x, y) -> x + y * 2);
+            setChild(index, node);
         }
 
         var node = this;
@@ -92,32 +94,31 @@ public class QuadTree<T> {
      * @return {@code Optional.empty()} if there's no value at {@code point}
      * otherwise returns {@code Optional.<T>of()}.
      */
-    public Optional<T> remove(Vec2 point) {
+    public void remove(Vec2 point, Consumer<T> consumer) {
         var stack = new Stack<QuadTree<T>>();
         var node = this;
         stack.push(node);
         while (node.size.x != 1) {
             var next = node.getChild(point);
-            if (next == null) {
-                return Optional.empty();
-            }
+            if (next == null)
+                return;
+
             stack.push(next);
             node = next;
         }
 
-        var value = stack.pop().value;
+        consumer.accept(stack.pop().value);
         while (!stack.isEmpty()) {
-            var parent = stack.pop();
-            var child = parent.getChild(point);
-            parent.setChild(point, null);
-            if (!parent.isLeaf()) {
-                parent.setChild(point, child);
+            node = stack.pop();
+            node.setChild(point, null);
+            if (!node.isLeaf()) {
                 break;
             }
         }
-
-        return Optional.of(value);
     }
+
+    // remove(Range)
+    // query(Range)
 
     public Iterable<T> iterable(Range range) {
         var items = new ArrayList<T>();
@@ -127,7 +128,7 @@ public class QuadTree<T> {
         stack.push(node);
         while (!stack.isEmpty()) {
             node = stack.pop();
-            if (node == null || !range.intersects(node.range))
+            if (node == null || !node.range.intersects(range))
                 continue;
             if (node.value != null)
                 items.add(node.value);
@@ -146,6 +147,65 @@ public class QuadTree<T> {
         };
     }
 
+    @Override
+    public Iterator<T> iterator() {
+        var self = this;
+        return new Iterator<T>() {
+            Stack<QuadTree<T>> stack = new Stack<QuadTree<T>>();
+            QuadTree<T> node = self;
+
+            @Override
+            public boolean hasNext() {
+                return stack.isEmpty();
+            }
+
+            @Override
+            public T next() {
+                while (!stack.isEmpty()) {
+                    node = stack.pop();
+                    if (node == null)
+                        continue;
+                    if (node.value != null)
+                        return (node.value);
+
+                    stack.push(node.bottomRight);
+                    stack.push(node.bottomLeft);
+                    stack.push(node.topRight);
+                    stack.push(node.topLeft);
+                }
+                return null;
+            }
+        };
+    }
+
+    private void setChild(Vec2 point, QuadTree<T> value) {
+        setChild(getChildIndex(point), value);
+    }
+
+    private QuadTree<T> getChild(Vec2 point) {
+        return getChild(getChildIndex(point));
+    }
+
+    private void setChild(int index, QuadTree<T> value) {
+        switch (index) {
+            case 0 -> topLeft = value;
+            case 1 -> topRight = value;
+            case 2 -> bottomLeft = value;
+            case 3 -> bottomRight = value;
+            default -> throw new IllegalStateException("Index must be in range [0;3]");
+        }
+    }
+
+    private QuadTree<T> getChild(int index) {
+        return switch (index) {
+            case 0 -> topLeft;
+            case 1 -> topRight;
+            case 2 -> bottomLeft;
+            case 3 -> bottomRight;
+            default -> throw new IllegalStateException("Index must be in range [0;3]");
+        };
+    }
+
     public boolean isLeaf() {
         return topLeft == null
             && topRight == null
@@ -153,49 +213,22 @@ public class QuadTree<T> {
             && bottomRight == null;
     }
 
+    private int getChildIndex(Vec2 point) {
+        return (point.x - position.x < size.x >> 1 ? 0 : 1)
+             + (point.y - position.y < size.y >> 1 ? 0 : 2);
+    }
+
     private Vec2 getPosition(Vec2 point) {
         return point
             .clone()
             .sub(position)
-            .map(x -> x < 0 ? -2
-                    : x >= size.x ? 0
-                    : x >= size.x >> 1 ? 1
+            .map(a -> a < 0 ? -2
+                    : a >= size.x ? 0
+                    : a >= size.x >> 1 ? 1
                     : 0
             )
             .mul(size.x >> 1)
             .add(position);
-    }
-
-    private void setChild(Vec2 point, QuadTree<T> node) {
-        setChild(getChildIndex(point), node);
-    }
-
-    private void setChild(int index, QuadTree<T> node) {
-        switch (index) {
-            case 0 -> topLeft = node;
-            case 1 -> topRight = node;
-            case 2 -> bottomLeft = node;
-            case 3 -> bottomRight = node;
-            default -> throw new IllegalStateException("Index must be in [0;3]");
-        }
-    }
-
-    private QuadTree<T> getChild(Vec2 point) {
-        return switch (getChildIndex(point)) {
-            case 0 -> topLeft;
-            case 1 -> topRight;
-            case 2 -> bottomLeft;
-            case 3 -> bottomRight;
-            default -> throw new IllegalStateException("Index must be in [0;3]");
-        };
-    }
-
-    private int getChildIndex(Vec2 point) {
-        return point
-            .clone()
-            .sub(position)
-            .map(x -> x < size.x >> 1 ? 0 : 1)
-            .flatMap((x, y) -> x + y * 2);
     }
 
     @Override
@@ -208,7 +241,7 @@ public class QuadTree<T> {
             .append(bottomLeft == null ? 0 : 1)
             .append(bottomRight == null ? 0 : 1)
             .append('|')
-            .append(value == null ? "" : value)
+            .append(value)
             .append('>')
             .toString();
     }

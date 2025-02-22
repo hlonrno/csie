@@ -1,11 +1,14 @@
 package sim.world;
 
 import java.util.Optional;
+import java.util.Iterator;
+import java.util.function.Consumer;
+
 import sim.gates.Gate;
 import sim.Range;
 import sim.Vec2;
 
-public class World {
+public class World implements Iterable<Gate>{
     private QuadTree<Gate> root;
 
     public World() {
@@ -20,15 +23,22 @@ public class World {
         root.add(gate.position, gate);
     }
 
-    public Optional<Gate> delete(Vec2 point) {
-        return root.remove(point);
+    public void delete(Vec2 point, Consumer<Gate> consumer) {
+        root.remove(point, consumer);
+    }
+
+    public void delete(Range range, Consumer<Gate> consumer) {
+        for (var gate : root.iterable(range))  {
+            root.remove(gate.position, consumer);
+        }
     }
 
     public Iterable<Gate> iterable(Range range) {
         return root.iterable(range);
     }
 
-    public Iterable<Gate> iterable() {
-        return root.iterable(Range.MAX_RANGE);
+    @Override
+    public Iterator<Gate> iterator() {
+        return root.iterator();
     }
 }
