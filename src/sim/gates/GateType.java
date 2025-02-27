@@ -3,7 +3,7 @@ package sim.gates;
 import java.util.stream.Stream;
 import java.util.function.Function;
 
-import sim.gui.Colors;
+import gui.Colors;
 
 public enum GateType {
     AND (Colors.lightBlue,   ins -> !ins.anyMatch(in -> !in)),

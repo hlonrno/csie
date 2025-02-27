@@ -1,10 +1,8 @@
-package sim.gui;
+package gui;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
 
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -12,7 +10,7 @@ import javax.swing.JLabel;
 import sim.world.World;
 import sim.*;
 import sim.gates.*;
-import sim.tui.*;
+import input.*;
 
 public class Window {
     private static int FPS = 60;
@@ -61,6 +59,7 @@ public class Window {
         //
 
         frame.addKeyListener(inputManager.getKeyListener());
+        frame.addMouseListener(inputManager.getMouseListener());
         frame.add(renderer, BorderLayout.CENTER);
         frame.add(keyBuffer, BorderLayout.SOUTH);
 

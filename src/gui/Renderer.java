@@ -1,4 +1,4 @@
-package sim.gui;
+package gui;
 
 import javax.swing.JPanel;
 import java.awt.Graphics;

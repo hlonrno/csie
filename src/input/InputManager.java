@@ -1,17 +1,31 @@
-package sim.tui;
+package input;
 
 import java.awt.event.KeyAdapter;
 import java.awt.event.MouseAdapter;
 import java.awt.event.KeyEvent;
-import java.awt.event.MouseEvent;
 import java.util.Optional;
 
 public class InputManager {
     private static final String ALLOWED_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ";
     private StringBuffer keyBuffer = new StringBuffer("");
     private Thread debounce;
+    private KeyAdapter keyListener;
+    private MouseAdapter mouseListener;
 
     public InputManager() {
+        keyListener = new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                var key = getKeyString(e.getKeyCode());
+                if (!key.isPresent() && isKeyPressed(key.get()))
+                    return;
+                keyBuffer.append(key.get());
+                debounce.interrupt();
+            }
+        };
+
+        mouseListener = new MouseAdapter() {};
+
         debounce = Thread.ofPlatform().unstarted(() -> {
             while (true) {
                 try {
@@ -105,15 +119,10 @@ public class InputManager {
     }
 
     public KeyAdapter getKeyListener() {
-        return new KeyAdapter() {
-            @Override
-            public void keyPressed(KeyEvent e) {
-                var key = getKeyString(e.getKeyCode());
-                if (!key.isPresent() && isKeyPressed(key.get()))
-                    return;
-                keyBuffer.append(key.get());
-                debounce.interrupt();
-            }
-        };
+        return keyListener;
+    }
+
+    public MouseAdapter getMouseListener() {
+        return mouseListener;
     }
 }
