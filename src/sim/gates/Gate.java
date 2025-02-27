@@ -34,6 +34,15 @@ public class Gate {
     }
 
     @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof Gate g))
+            return false;
+
+        return type.equals(g.type)
+            && position.equals(g.position);
+    }
+
+    @Override
     public String toString() {
         return new StringBuilder("<Gate:")
             .append(state)

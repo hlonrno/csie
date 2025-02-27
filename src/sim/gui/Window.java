@@ -3,22 +3,28 @@ package sim.gui;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 
 import sim.world.World;
-import sim.Vec2;
+import sim.*;
 import sim.gates.*;
-import sim.tui.Input;
+import sim.tui.*;
 
 public class Window {
     private static int FPS = 60;
     private JFrame frame;
     private Renderer renderer;
     private World world;
-    private Input input;
+    private InputManager inputManager;
     private JLabel keyBuffer;
+    
+    public static void main(String[] args) throws InterruptedException {
+        new Window().loop();
+    }
 
     public Window() throws InterruptedException {
         frame = new JFrame();
@@ -40,7 +46,7 @@ public class Window {
         frame.repaint();
 
         world = new World();
-        input = new Input();
+        inputManager = new InputManager();
         renderer = new Renderer(world);
         keyBuffer = new JLabel();
 
@@ -51,10 +57,10 @@ public class Window {
         for (int i = -100; i < 100; i++)
             for (int j = -100; j < 100; j++)
                 world.set(new Gate(GateType.OR, new Vec2(i, j)));
-        world.iterable();
+        world.iterable(Range.MAX_RANGE);
         //
 
-        frame.addKeyListener(input);
+        frame.addKeyListener(inputManager.getKeyListener());
         frame.add(renderer, BorderLayout.CENTER);
         frame.add(keyBuffer, BorderLayout.SOUTH);
 
@@ -76,7 +82,7 @@ public class Window {
             now = System.nanoTime();
             deltaTime = (float)frameTimeNanos / (now - lastTime);
 
-            int movementSpeed = (int)(8 * deltaTime);
+            /*int movementSpeed = (int)(8 * deltaTime);
             if (input.isKeyPressed("w")) {
                 renderer.cameraPosition.add(0, -movementSpeed);
             }
@@ -94,9 +100,9 @@ public class Window {
             }
             if (input.isKeyPressed("e")) {
                 renderer.scale -= 0.06f * deltaTime;
-            }
+            }*/
 
-            keyBuffer.setText(" " + input.getKeyBuffer() + renderer.viewRange);
+            keyBuffer.setText(" " + inputManager.getKeyBuffer() + renderer.viewRange);
             frame.repaint();
 
             lastTime = now;

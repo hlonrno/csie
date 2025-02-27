@@ -10,14 +10,12 @@ public class Renderer extends JPanel {
     public static final int cellSize = 32;
     public static final int padding = 2;
     public float scale = 1f;
-    private final Vec2 one = Vec2.one();
-    protected Vec2 cameraPosition = new Vec2(0, 0);
-    private Vec2 viewTopLeft = one.clone(), // in cells
-            viewSize = one.clone();    // in cells
     public Range viewRange;
-    private Vec2 topLeft = one.clone(),
-            size = one.clone();
-    private int scaledPadding;
+    protected Vec2 cameraPosition = new Vec2(0, 0);
+    private Vec2 viewTopLeft = Vec2.one.clone();
+    private Vec2 viewSize = Vec2.one.clone();
+    private Vec2 topLeft = Vec2.one.clone();
+    private Vec2 size = Vec2.one.clone();
     private World world;
 
     public Renderer(World world) {
@@ -30,6 +28,7 @@ public class Renderer extends JPanel {
     /**
      * Changes the scale, and the camera's position
      * relative to this panel's center.
+     * 
      * @param newScale (float) - the new scale.
      */
     public void changeScale(float newScale) {
@@ -41,20 +40,23 @@ public class Renderer extends JPanel {
     protected void paintComponent(Graphics g) {
         g.setColor(Colors.darkGrey.get());
         g.fillRect(0, 0, getWidth(), getHeight());
-        scaledPadding = (int)(padding * scale);
 
         // viewRange has references to these objects.
-        viewTopLeft.set(cameraPosition)
+        viewTopLeft
+            .set(cameraPosition)
             .map(x -> (int)(x / (cellSize * scale) - (x < 0 ? 1f : 0f)));
-        viewSize.set(cameraPosition)
+        viewSize
+            .set(cameraPosition)
             .add(getWidth(), getHeight())
             .map(x -> (int)(x / (cellSize * scale) + 1f))
             .sub(viewTopLeft);
 
         for (var gate : world.iterable(viewRange)) {
-            topLeft.set(gate.position)
+            topLeft
+                .set(gate.position)
                 .map(x -> (int)(x * cellSize * scale));
-            size.set(gate.position)
+            size
+                .set(gate.position)
                 .map(x -> (int)((x + 1) * cellSize * scale) - 1)
                 .sub(topLeft);
             topLeft.sub(cameraPosition);

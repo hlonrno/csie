@@ -1,18 +1,33 @@
 package sim.tui;
 
+import java.awt.event.KeyAdapter;
+import java.awt.event.MouseAdapter;
 import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
 import java.util.Optional;
 
-public class Input implements KeyListener {
-    public static final String ALLOWED_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ";
+public class InputManager {
+    private static final String ALLOWED_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ";
     private StringBuffer keyBuffer = new StringBuffer("");
+    private Thread debounce;
+
+    public InputManager() {
+        debounce = Thread.ofPlatform().unstarted(() -> {
+            while (true) {
+                try {
+                    Thread.sleep(1000);
+                    clearKeyBuffer();
+                    debounce.interrupt();
+                } catch (Exception e) {}
+            }
+        });
+    }
 
     public String getKeyBuffer() {
         return keyBuffer.toString();
     }
 
-    private void clearKeyBuffer() {
+    public  void clearKeyBuffer() {
         keyBuffer.delete(0, keyBuffer.length());
     }
 
@@ -27,8 +42,9 @@ public class Input implements KeyListener {
             if (chr == '\\') {
                 i++;
                 key = String.valueOf(chr) + keys.charAt(i);
-            } else
+            } else {
                 key = String.valueOf(chr);
+            }
 
             if (!isKeyPressed(key))
                 return false;
@@ -63,10 +79,7 @@ public class Input implements KeyListener {
             case KeyEvent.VK_DOWN -> "\\J";
             case KeyEvent.VK_UP -> "\\K";
             case KeyEvent.VK_RIGHT -> "\\L";
-            case KeyEvent.VK_ESCAPE -> {
-                clearKeyBuffer();
-                yield null;
-            }
+            case KeyEvent.VK_ESCAPE -> "\\E";
             default -> {
                 System.out.printf("""
                     [WARN]: Unrecognized Key.
@@ -83,27 +96,24 @@ public class Input implements KeyListener {
         });
     }
 
-    @Override
-    public void keyTyped(KeyEvent e) {}
-
-    @Override
     public void keyPressed(KeyEvent e) {
         var key = getKeyString(e.getKeyCode());
-        if (key.isPresent() && !isKeyPressed(key.get()))
-            keyBuffer.append(key.get());
+        if (!key.isPresent() && isKeyPressed(key.get()))
+            return;
+        keyBuffer.append(key.get());
+        debounce.interrupt();
     }
 
-    @Override
-    public void keyReleased(KeyEvent e) {
-        var key = getKeyString(e.getKeyCode());
-        if (key.isEmpty())
-            return;
-
-        int index = keyBuffer.indexOf(key.get());
-        if (index != -1)
-            keyBuffer.delete(
-                index,
-                index + key.get().length()
-            );
+    public KeyAdapter getKeyListener() {
+        return new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                var key = getKeyString(e.getKeyCode());
+                if (!key.isPresent() && isKeyPressed(key.get()))
+                    return;
+                keyBuffer.append(key.get());
+                debounce.interrupt();
+            }
+        };
     }
 }
